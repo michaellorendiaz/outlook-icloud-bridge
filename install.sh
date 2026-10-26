@@ -6,7 +6,8 @@ set -euo pipefail
 APP="outlook-icloud-bridge"
 LABEL="local.$APP"
 KEYCHAIN_SERVICE="$APP"
-INTERVAL="${SYNC_INTERVAL:-900}"   # seconds between syncs
+INTERVAL="${SYNC_INTERVAL:-900}"   # seconds between syncs (rounded to whole minutes, max 60)
+STEP=$((INTERVAL / 60)); (( STEP >= 1 && STEP <= 60 )) || STEP=15
 SRC="$(cd "$(dirname "$0")" && pwd)"
 # Run from Application Support, not the clone: launchd jobs can't read
 # ~/Documents, ~/Desktop or ~/Downloads without extra privacy permissions.
@@ -125,10 +126,17 @@ echo
 echo "== Preview (nothing is written yet) =="
 "$DEST/venv/bin/python" "$DEST/bridge.py" --dry-run
 echo
-[[ "$(yesno "Start syncing now and every $((INTERVAL / 60)) minutes?" y)" == true ]] || {
+[[ "$(yesno "Start syncing now and every $STEP minutes?" y)" == true ]] || {
   echo "Not scheduled. Re-run 'bash install.sh' when ready."; exit 0; }
 
 # --- LaunchAgent ------------------------------------------------------------
+# Run at fixed clock minutes (:00, :15, ...) rather than with StartInterval. StartInterval
+# only counts time the Mac is awake, so after a wake the next run could be up to 15 minutes
+# away; launchd runs a missed calendar slot as soon as the Mac wakes.
+MINUTES=""
+for ((m = 0; m < 60; m += STEP)); do
+  MINUTES+="    <dict><key>Minute</key><integer>$m</integer></dict>"$'\n'
+done
 cat > "$PLIST" <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -141,8 +149,9 @@ cat > "$PLIST" <<EOF
     <string>$DEST/venv/bin/python</string>
     <string>$DEST/bridge.py</string>
   </array>
-  <key>StartInterval</key>
-  <integer>$INTERVAL</integer>
+  <key>StartCalendarInterval</key>
+  <array>
+$MINUTES  </array>
   <key>RunAtLoad</key>
   <true/>
   <key>ProcessType</key>
@@ -164,7 +173,7 @@ for attempt in 1 2 3 4 5; do
 done
 
 echo
-echo "Installed. It syncs now, every $((INTERVAL / 60)) minutes while the Mac is awake, and on wake."
+echo "Installed. It syncs now, every $STEP minutes while the Mac is awake, and right after it wakes."
 echo "  Log:        tail -f \"$LOG\""
 echo "  Sync now:   launchctl kickstart gui/$(id -u)/$LABEL"
 echo "  Uninstall:  bash uninstall.sh"
