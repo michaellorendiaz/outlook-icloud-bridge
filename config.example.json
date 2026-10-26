@@ -1,0 +1,14 @@
+{
+  "feed_url": "https://outlook.office365.com/owa/calendar/XXXXXXXX/YYYYYYYY/calendar.ics",
+  "apple_id": "you@icloud.com",
+  "target_calendar": "Work",
+  "label": "Work",
+  "include_titles": true,
+  "include_location": true,
+  "online_as_remote": true,
+  "include_tentative": true,
+  "skip_multiday_allday": false,
+  "exclude_keywords": [],
+  "window_back_days": 7,
+  "window_fwd_days": 90
+}
