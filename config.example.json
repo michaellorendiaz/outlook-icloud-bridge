@@ -10,5 +10,6 @@
   "skip_multiday_allday": false,
   "exclude_keywords": [],
   "window_back_days": 7,
-  "window_fwd_days": 90
+  "window_fwd_days": 90,
+  "uid_salt": "Work"
 }

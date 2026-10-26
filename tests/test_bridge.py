@@ -136,6 +136,11 @@ class BuildDesiredTests(unittest.TestCase):
         self.assertEqual(s.count("Team standup"), 3)
         self.assertEqual(set(desired()), set(desired()), "UIDs must be deterministic")
 
+    def test_uid_salt(self):
+        plain, salted = set(desired()), set(desired(uid_salt="Bridge Test"))
+        self.assertTrue(plain.isdisjoint(salted), "salt must change every UID")
+        self.assertEqual(set(desired(uid_salt="")), plain, "no salt keeps original UIDs")
+
     def test_window_limits(self):
         self.assertEqual(len(desired(window_fwd_days=2)), 2)  # busy-1 + first standup
 

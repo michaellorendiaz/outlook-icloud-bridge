@@ -97,6 +97,7 @@ cfg = {
     "exclude_keywords": [],
     "window_back_days": 7,
     "window_fwd_days": 90,
+    "uid_salt": os.environ["TARGET"],
 }
 with open(sys.argv[1], "w") as f:
     json.dump(cfg, f, indent=2)

@@ -51,6 +51,7 @@ DEFAULTS = {
     "exclude_keywords": [],
     "window_back_days": 7,
     "window_fwd_days": 90,
+    "uid_salt": "",
 }
 
 logging.basicConfig(
@@ -130,8 +131,14 @@ def clean_location(loc, cfg):
     return loc
 
 
-def stable_uid(source_uid, start_utc):
-    h = hashlib.sha1(f"{source_uid}|{start_utc.isoformat()}".encode()).hexdigest()[:24]
+def stable_uid(source_uid, start_utc, salt=""):
+    # iCloud rejects a UID that already exists in another calendar on the same
+    # account, so installs salt it with their calendar name. No salt keeps the
+    # original UIDs.
+    key = f"{source_uid}|{start_utc.isoformat()}"
+    if salt:
+        key = f"{salt}|{key}"
+    h = hashlib.sha1(key.encode()).hexdigest()[:24]
     return f"obs-{h}@outlook-busy-bridge"
 
 
@@ -186,7 +193,7 @@ def build_desired(cal, cfg, now=None):
         if excluded(title, cfg):
             continue
         loc = clean_location(str(occ.get("LOCATION", "")), cfg)
-        uid = stable_uid(str(occ.get("UID", "")), start_utc)
+        uid = stable_uid(str(occ.get("UID", "")), start_utc, cfg["uid_salt"])
         desired[uid] = (start_utc, end_utc, allday, loc, event_summary(title, cfg))
     return desired
 
@@ -290,7 +297,16 @@ def sync(cfg, dry_run=False):
             if dry_run:
                 log.info("would create: %s %s", fmt(s, e, allday), summary)
             else:
-                calendar.save_event(make_ics(uid, s, e, allday, loc, summary).decode())
+                try:
+                    calendar.save_event(make_ics(uid, s, e, allday, loc, summary).decode())
+                except caldav.lib.error.PutError as exc:
+                    if "412" not in str(exc):
+                        raise
+                    raise SystemExit(
+                        "iCloud refused to create an event because one with the same ID is already "
+                        "in another calendar on this account (left by an earlier sync into a "
+                        "different calendar). Set a new \"uid_salt\" in config.json, or run "
+                        "'bash install.sh --reconfigure', which sets it for you.")
             created += 1
         else:
             cs, ce, cloc, csum = existing_props(existing[uid])

@@ -94,6 +94,7 @@ The installer asks about the common options. All of them live in `~/Library/Appl
 | `skip_multiday_allday` | `false` | Skip all-day events that span more than one day, such as room or resource bookings that land on your calendar. Single-day all-day events still sync. |
 | `exclude_keywords` | `[]` | Skip events whose title contains any of these words (not case-sensitive), e.g. `["Focus time", "Lunch"]`. |
 | `window_back_days` / `window_fwd_days` | `7` / `90` | How far back and ahead to keep in sync. |
+| `uid_salt` | calendar name | Mixed into each synced event's ID. The installer sets it to your calendar name; leave it alone unless you hit the 412 error below. |
 
 Example: a fully private setup where family sees only "Busy":
 
@@ -146,6 +147,8 @@ This stops the background job. It also asks whether to delete the events it adde
 **`iCloud calendar 'Work' not found`**: the name must match exactly, including capitalization. The error lists the calendars it can see. The calendar must be an **iCloud** calendar, not "On My Mac" or a subscription.
 
 **401 / authentication errors**: the app-specific password is wrong or was revoked. Create a new one and run `bash install.sh --reconfigure`. Use your Apple ID email, not a phone number.
+
+**`412 Precondition Failed` / "an event with the same ID is already in another calendar"**: an earlier sync left copies of these events in a different iCloud calendar on the same account, and iCloud won't allow the same event ID twice. Run `bash install.sh --reconfigure` (or change `uid_salt` in `config.json` to any new word). You can delete the old copies from the other calendar by hand.
 
 **Feed errors (403 / 404)**: the published link was reset or unpublished in Outlook. Copy the new ICS link and run `bash install.sh --reconfigure`.
 
