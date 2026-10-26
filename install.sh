@@ -59,8 +59,16 @@ fi
 if [[ ! -f "$CONFIG" ]] || $RECONFIGURE; then
   echo
   echo "== Setup =="
-  FEED_URL="$(ask "Outlook published calendar ICS link (ends in .ics)" "")"
-  [[ "$FEED_URL" == http*.ics* ]] || die "that doesn't look like an ICS link"
+  while true; do
+    FEED_URL="$(ask "Outlook published calendar ICS link (ends in .ics)" "")"
+    # Outlook shows an HTML and an ICS link side by side; they differ only in the extension
+    if [[ "$FEED_URL" == http*/calendar.html ]]; then
+      FEED_URL="${FEED_URL%.html}.ics"
+      echo "That's the HTML link; using the ICS version of it instead."
+    fi
+    [[ "$FEED_URL" == http*.ics* ]] && break
+    echo "That doesn't look like an ICS link. Copy the one ending in .ics and try again."
+  done
   APPLE_ID="$(ask "Apple ID email" "")"
   TARGET="$(ask "iCloud calendar to sync into (create it in Calendar first)" "Work")"
   echo
@@ -103,7 +111,8 @@ APPLE_ID="$("$PYTHON" -c 'import json,sys; print(json.load(open(sys.argv[1]))["a
 if $RECONFIGURE || ! security find-generic-password -s "$KEYCHAIN_SERVICE" -a "$APPLE_ID" >/dev/null 2>&1; then
   echo
   echo "Create an app-specific password at https://account.apple.com -> Sign-In and Security"
-  echo "-> App-Specific Passwords, then paste it below (it will not be shown)."
+  echo "-> App-Specific Passwords, then paste it below. macOS asks twice ('password data"
+  echo "for new item', then 'retype'), and nothing appears on screen as you paste."
   # -w last makes 'security' prompt for the password itself, so it never
   # appears in shell history or the process list.
   security add-generic-password -U -s "$KEYCHAIN_SERVICE" -a "$APPLE_ID" \
@@ -116,7 +125,7 @@ echo "== Preview (nothing is written yet) =="
 "$DEST/venv/bin/python" "$DEST/bridge.py" --dry-run
 echo
 [[ "$(yesno "Start syncing now and every $((INTERVAL / 60)) minutes?" y)" == true ]] || {
-  echo "Not scheduled. Re-run ./install.sh when ready."; exit 0; }
+  echo "Not scheduled. Re-run 'bash install.sh' when ready."; exit 0; }
 
 # --- LaunchAgent ------------------------------------------------------------
 cat > "$PLIST" <<EOF
@@ -157,4 +166,4 @@ echo
 echo "Installed. It syncs now, every $((INTERVAL / 60)) minutes while the Mac is awake, and on wake."
 echo "  Log:        tail -f \"$LOG\""
 echo "  Sync now:   launchctl kickstart gui/$(id -u)/$LABEL"
-echo "  Uninstall:  ./uninstall.sh"
+echo "  Uninstall:  bash uninstall.sh"
