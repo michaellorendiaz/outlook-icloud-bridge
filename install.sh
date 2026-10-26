@@ -146,7 +146,12 @@ cat > "$PLIST" <<EOF
 EOF
 
 launchctl bootout "gui/$(id -u)/$LABEL" 2>/dev/null || true
-launchctl bootstrap "gui/$(id -u)" "$PLIST"
+# bootstrap can briefly fail while a just-removed job is still shutting down
+for attempt in 1 2 3 4 5; do
+  launchctl bootstrap "gui/$(id -u)" "$PLIST" 2>/dev/null && break
+  [[ $attempt == 5 ]] && die "could not load $PLIST (try: launchctl bootstrap gui/$(id -u) \"$PLIST\")"
+  sleep 1
+done
 
 echo
 echo "Installed. It syncs now, every $((INTERVAL / 60)) minutes while the Mac is awake, and on wake."

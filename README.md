@@ -37,7 +37,7 @@ Outlook (work)  ──ICS feed──▶  your Mac (every 15 min)  ──CalDAV�
    - **Can view when I'm busy**: only plain busy blocks. Titles and locations won't be available.
 3. Click **Publish** and copy the **ICS** link (it ends in `.ics`, not `.html`).
 
-> 🔒 **Treat this link like a password.** Anyone who has it can read your calendar. Don't paste it into chats or commit it anywhere. If it ever leaks, click **Reset links** on the same screen and re-run `./install.sh --reconfigure`.
+> 🔒 **Treat this link like a password.** Anyone who has it can read your calendar. Don't paste it into chats or commit it anywhere. If it ever leaks, click **Reset links** on the same screen and re-run `bash install.sh --reconfigure`.
 
 ### 2. Create the iCloud calendar and share it
 
@@ -53,10 +53,19 @@ We recommend a dedicated calendar for this. It's easy to share, hide or delete, 
 
 ### 4. Install
 
+Open **Terminal** and either clone the repo:
+
 ```bash
 git clone https://github.com/michaellorendiaz/outlook-icloud-bridge.git
 cd outlook-icloud-bridge
-./install.sh
+bash install.sh
+```
+
+…or, without git, click **Code → Download ZIP** at the top of this page, unzip it, and run:
+
+```bash
+cd ~/Downloads/outlook-icloud-bridge-main
+bash install.sh
 ```
 
 The installer will:
@@ -98,7 +107,7 @@ Example: show where you need to be:
 { "label": "Work", "include_titles": true, "include_location": true }
 ```
 
-To redo the questions (new ICS link, different calendar, new password), run `./install.sh --reconfigure`.
+To redo the questions (new ICS link, different calendar, new password), run `bash install.sh --reconfigure`.
 
 > ⚠️ Titles and locations become visible to **everyone you share the iCloud calendar with**. Check your workplace's rules before sharing meeting details outside work.
 
@@ -111,8 +120,8 @@ To redo the questions (new ICS link, different calendar, new password), run `./i
 | Watch the log | `tail -f ~/Library/Logs/outlook-icloud-bridge.log` |
 | Sync right now | `launchctl kickstart gui/$(id -u)/local.outlook-icloud-bridge` |
 | Preview what the feed contains (no iCloud) | `~/Library/Application\ Support/outlook-icloud-bridge/venv/bin/python ~/Library/Application\ Support/outlook-icloud-bridge/bridge.py --check-feed` |
-| Preview changes without writing | same as above, with `--dry-run` |
-| Update to a newer version | `git pull && ./install.sh` |
+| Preview changes to iCloud without writing | `~/Library/Application\ Support/outlook-icloud-bridge/venv/bin/python ~/Library/Application\ Support/outlook-icloud-bridge/bridge.py --dry-run` |
+| Update to a newer version | `git pull && bash install.sh` (or download the new ZIP and run `bash install.sh`) |
 
 A healthy log line looks like:
 
@@ -123,7 +132,7 @@ A healthy log line looks like:
 ## Uninstall
 
 ```bash
-./uninstall.sh
+bash uninstall.sh
 ```
 
 This stops the background job. It also asks whether to delete the events it added (your own events are never touched) and whether to remove the Keychain password. Afterwards, revoke the app-specific password at account.apple.com and, if you like, stop publishing the calendar in Outlook.
@@ -132,13 +141,13 @@ This stops the background job. It also asks whether to delete the events it adde
 
 ## Troubleshooting
 
-**"Python 3.10 or newer is required"**: run `brew install python` (or use the python.org installer), then re-run `./install.sh`.
+**"Python 3.10 or newer is required"**: run `brew install python` (or use the python.org installer), then re-run `bash install.sh`.
 
 **`iCloud calendar 'Work' not found`**: the name must match exactly, including capitalization. The error lists the calendars it can see. The calendar must be an **iCloud** calendar, not "On My Mac" or a subscription.
 
-**401 / authentication errors**: the app-specific password is wrong or was revoked. Create a new one and run `./install.sh --reconfigure`. Use your Apple ID email, not a phone number.
+**401 / authentication errors**: the app-specific password is wrong or was revoked. Create a new one and run `bash install.sh --reconfigure`. Use your Apple ID email, not a phone number.
 
-**Feed errors (403 / 404)**: the published link was reset or unpublished in Outlook. Copy the new ICS link and run `./install.sh --reconfigure`.
+**Feed errors (403 / 404)**: the published link was reset or unpublished in Outlook. Copy the new ICS link and run `bash install.sh --reconfigure`.
 
 **Titles show as just "Busy"**: either `include_titles` is `false`, or the calendar was published with **Can view when I'm busy**. Re-publish it with more detail.
 
