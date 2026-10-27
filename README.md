@@ -35,7 +35,7 @@ Outlook (work)  ──ICS feed──▶  your Mac (every 15 min)  ──CalDAV�
    - **Can view all details**: needed if you want meeting titles or locations.
    - **Can view titles and locations**: also works for titles and locations.
    - **Can view when I'm busy**: only plain busy blocks. Titles and locations won't be available.
-3. Click **Publish** and copy the **ICS** link (it ends in `.ics`, not `.html`).
+3. Click **Publish** and copy the **ICS** link (it ends in `.ics`). If you copy the HTML link by mistake, the installer switches it to the ICS one for you.
 
 > 🔒 **Treat this link like a password.** Anyone who has it can read your calendar. Don't paste it into chats or commit it anywhere. If it ever leaks, click **Reset links** on the same screen and re-run `bash install.sh --reconfigure`.
 
