@@ -21,7 +21,7 @@ if [[ -f "$CONFIG" ]]; then
   fi
   APPLE_ID="$("$DEST/venv/bin/python" -c 'import json,sys; print(json.load(open(sys.argv[1]))["apple_id"])' "$CONFIG")"
   if confirm "Remove the iCloud app-specific password from the Keychain?"; then
-    security delete-generic-password -s "$APP" -a "$APPLE_ID" >/dev/null && echo "Removed."
+    security delete-generic-password -s "$APP" -a "$APPLE_ID" >/dev/null 2>&1 && echo "Removed."
     echo "You can also revoke it at https://account.apple.com."
   fi
 fi
